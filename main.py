@@ -38,4 +38,5 @@ async def handle_termin(request: Request):
     action = data.get("action")
     phrase = data.get("phrase")
     parsed_date = parse_date_phrase(phrase)
-    return {"parsed_date": str(parsed_date)}
+    return {"parsed_date": parsed_date.date().isoformat()}
+
