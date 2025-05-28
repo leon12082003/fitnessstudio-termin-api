@@ -22,7 +22,9 @@ def _get_events(date):
 
 def _build_datetime(date_str, time_str):
     dt = datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %H:%M")
-    return dt.replace(second=0, microsecond=0, tzinfo=pytz.timezone(TIMEZONE))
+    tz = pytz.timezone(TIMEZONE)
+dt = dt.replace(second=0, microsecond=0)
+return tz.localize(dt)
 
 def check_availability(date, time):
     dt = _build_datetime(date, time)
