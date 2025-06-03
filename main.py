@@ -9,31 +9,33 @@ from date_utils import parse_date_phrase
 app = FastAPI()
 
 def normalize_phrase(phrase):
-    # Alle Umwandlungen
+    # Feste Ersetzungen
     replacements = {
         "am ": "",  # z. B. „am 15. Juli“
     }
 
-    # Wochentage vollständig
+    # Alle Wochentage
     weekdays = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"]
-    phrase_original = phrase  # für späteres .replace()
-
     phrase_lower = phrase.lower()
+    phrase_result = phrase  # bleibt originalgroßgeschrieben
+
     for tag in weekdays:
         lower_tag = tag.lower()
+        # Dynamische Ersetzungen basierend auf lower_case input
         if f"{lower_tag} in einer woche" in phrase_lower:
-            phrase = phrase.replace(f"{tag} in einer Woche", f"nächster {tag}")
+            phrase_result = phrase_result.replace(f"{tag} in einer Woche", f"nächster {tag}")
         if f"diesen {lower_tag}" in phrase_lower:
-            phrase = phrase.replace(f"diesen {tag}", f"kommender {tag}")
+            phrase_result = phrase_result.replace(f"diesen {tag}", f"kommender {tag}")
         if f"nächsten {lower_tag}" in phrase_lower:
-            phrase = phrase.replace(f"nächsten {tag}", f"kommender {tag}")
+            phrase_result = phrase_result.replace(f"nächsten {tag}", f"kommender {tag}")
         if f"kommenden {lower_tag}" in phrase_lower:
-            phrase = phrase.replace(f"kommenden {tag}", f"kommender {tag}")
+            phrase_result = phrase_result.replace(f"kommenden {tag}", f"kommender {tag}")
 
+    # Einfache Ersatzwörter wie „am “
     for key, val in replacements.items():
-        phrase = phrase.replace(key, val)
+        phrase_result = phrase_result.replace(key, val)
 
-    return phrase
+    return phrase_result
 
 @app.post("/check_availability")
 async def api_check_availability(data: dict):
