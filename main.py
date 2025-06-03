@@ -9,28 +9,29 @@ from date_utils import parse_date_phrase
 app = FastAPI()
 
 def normalize_phrase(phrase):
+    # Alle Umwandlungen
     replacements = {
-        "am ": "",  # für „am 15. Juli“
+        "am ": "",  # z. B. „am 15. Juli“
     }
 
-    # Dynamisch: alle Wochentage durchgehen
-    weekdays = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag"]
-    phrase_lower = phrase.lower()
+    # Wochentage vollständig
+    weekdays = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"]
+    phrase_original = phrase  # für späteres .replace()
 
+    phrase_lower = phrase.lower()
     for tag in weekdays:
-        if f"{tag.lower()} in einer woche" in phrase_lower:
+        lower_tag = tag.lower()
+        if f"{lower_tag} in einer woche" in phrase_lower:
             phrase = phrase.replace(f"{tag} in einer Woche", f"nächster {tag}")
-        if f"diesen {tag.lower()}" in phrase_lower:
+        if f"diesen {lower_tag}" in phrase_lower:
             phrase = phrase.replace(f"diesen {tag}", f"kommender {tag}")
-        if f"nächsten {tag.lower()}" in phrase_lower:
+        if f"nächsten {lower_tag}" in phrase_lower:
             phrase = phrase.replace(f"nächsten {tag}", f"kommender {tag}")
-        if f"kommenden {tag.lower()}" in phrase_lower:
+        if f"kommenden {lower_tag}" in phrase_lower:
             phrase = phrase.replace(f"kommenden {tag}", f"kommender {tag}")
 
-    # Feste Ersetzungen anwenden
     for key, val in replacements.items():
-        if key in phrase:
-            phrase = phrase.replace(key, val)
+        phrase = phrase.replace(key, val)
 
     return phrase
 
