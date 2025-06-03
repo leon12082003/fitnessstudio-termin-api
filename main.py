@@ -9,19 +9,16 @@ from date_utils import parse_date_phrase
 app = FastAPI()
 
 def normalize_phrase(phrase):
-    # Feste Ersetzungen
     replacements = {
-        "am ": "",  # z. B. „am 15. Juli“
+        "am ": "",
     }
 
-    # Alle Wochentage
     weekdays = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"]
     phrase_lower = phrase.lower()
-    phrase_result = phrase  # bleibt originalgroßgeschrieben
+    phrase_result = phrase
 
     for tag in weekdays:
         lower_tag = tag.lower()
-        # Dynamische Ersetzungen basierend auf lower_case input
         if f"{lower_tag} in einer woche" in phrase_lower:
             phrase_result = phrase_result.replace(f"{tag} in einer Woche", f"nächster {tag}")
         if f"diesen {lower_tag}" in phrase_lower:
@@ -31,7 +28,6 @@ def normalize_phrase(phrase):
         if f"kommenden {lower_tag}" in phrase_lower:
             phrase_result = phrase_result.replace(f"kommenden {tag}", f"kommender {tag}")
 
-    # Einfache Ersatzwörter wie „am “
     for key, val in replacements.items():
         phrase_result = phrase_result.replace(key, val)
 
@@ -64,6 +60,29 @@ async def api_reschedule_slot(data: dict):
 @app.post("/handle_termin")
 async def handle_termin(request: Request):
     data = await request.json()
+    action = data.get("action")
+
+    # Buchungsaktionen
+    if action == "book_slot":
+        date = parse_date_phrase(normalize_phrase(data["phrase"])).date().isoformat()
+        return book_slot(date, data["time"], data["name"])
+    elif action == "check_availability":
+        date = parse_date_phrase(normalize_phrase(data["phrase"])).date().isoformat()
+        return check_availability(date, data["time"])
+    elif action == "get_available_slots":
+        date = parse_date_phrase(normalize_phrase(data["phrase"])).date().isoformat()
+        return get_available_slots(date)
+    elif action == "get_next_free_slots":
+        return get_next_free_slots()
+    elif action == "delete_slot":
+        date = parse_date_phrase(normalize_phrase(data["phrase"])).date().isoformat()
+        return delete_slot(date, data["time"])
+    elif action == "reschedule_slot":
+        old_date = parse_date_phrase(normalize_phrase(data["old_phrase"])).date().isoformat()
+        new_date = parse_date_phrase(normalize_phrase(data["new_phrase"])).date().isoformat()
+        return reschedule_slot(old_date, data["old_time"], new_date, data["new_time"], data["name"])
+
+    # Nur Datum erkennen (Fallback)
     phrase = normalize_phrase(data.get("phrase"))
     parsed_date = parse_date_phrase(phrase)
     if parsed_date:
